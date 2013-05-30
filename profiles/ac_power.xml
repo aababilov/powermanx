@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<profile>
+	<signal name="lid" enabled="true" timeout="3">
+		<condition_list>
+			<condition key="on_sig_value" value="true"/>
+		</condition_list>
+		<slot_list>
+			<slot name="suspend" enabled="true"/>
+		</slot_list>
+	</signal>
+	<signal name="profile_activated" enabled="true">
+		<slot_list>
+			<slot name="smp_plug_exe" enabled="true" param="Loaded ac_power!"/>
+			<slot name="lcd_brightness" enabled="true" param="100"/>
+		</slot_list>
+	</signal>
+	<signal name="idle" enabled="true" timeout="120">
+		<slot_list>
+			<slot name="dim" enabled="true" param="off"/>
+		</slot_list>
+	</signal>
+</profile>

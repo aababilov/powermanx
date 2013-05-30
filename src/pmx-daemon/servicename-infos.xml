@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<node name="/org/freedesktop/PowerManX">
+	<interface name="org.freedesktop.PowerManX">
+	  <annotation name="org.freedesktop.DBus.GLib.CSymbol"
+                      value="pm_svr"/>
+	  <method name="GetProfile">
+	    <arg type="s" name="profile" direction="out" />
+	  </method>
+	  <method name="SetProfile">
+	    <arg type="s" name="profile" direction="in" />
+	  </method>
+	  <method name="ReloadProfiles">
+	    <arg type="as" name="names" direction="in" />
+	    <arg type="as" name="bodies" direction="in" />
+	  </method>
+	  <method name="ActivateSlot">
+	    <arg type="s" name="slot" direction="in" />
+            <arg type="s" name="param" direction="in" />
+	  </method>
+	</interface>
+</node>
+

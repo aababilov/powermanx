@@ -1,0 +1,21 @@
+#!/bin/sh
+
+case "$1" in
+	has_param)
+		echo yes
+		exit 0
+		;;
+	set)
+		/bin/echo -e "\033[01;32msmp_plug: $2\033[00m"
+		exit 0
+		;;
+	any_param)
+		echo yes
+		exit 0
+		;;
+	avail_params)
+		echo -ne "amp\nas\nb\n"
+		exit 0
+		;;
+esac
+

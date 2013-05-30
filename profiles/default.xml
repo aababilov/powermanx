@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<profile>
+  <signal name="ac_adapter" enabled="true" timeout="2">
+    <condition_list>
+      <condition key="on_sig_value" value="true"/>
+    </condition_list>
+    <slot_list>
+      <slot name="change_profile" enabled="true" param="ac_power"/>
+    </slot_list>
+  </signal>
+  <signal name="ac_adapter" enabled="true" timeout="2">
+    <condition_list>
+      <condition key="on_sig_value" value="false"/>
+    </condition_list>
+    <slot_list>
+      <slot name="change_profile" enabled="true" param="battery"/>
+    </slot_list>
+  </signal>
+
+  <signal name="hotkey" enabled="true">
+    <condition_list>
+      <condition key="key_name" value="sleep"/>
+    </condition_list>
+    <slot_list>
+      <slot name="hibernate" enabled="true" param="No sleep!"/>
+    </slot_list>
+  </signal>
+
+  <signal name="hotkey" enabled="true">
+    <condition_list>
+      <condition key="key_name" value="power"/>
+    </condition_list>
+    <slot_list>
+      <slot name="shutdown" enabled="true"/>
+    </slot_list>
+  </signal>
+
+  <signal name="hotkey" enabled="true">
+    <condition_list>
+      <condition key="key_name" value="brightness-up"/>
+    </condition_list>
+    <slot_list>
+      <slot name="lcd_brightness" enabled="true" param="+"/>
+    </slot_list>
+  </signal>
+  <signal name="hotkey" enabled="true">
+    <condition_list>
+      <condition key="key_name" value="brightness-down"/>
+    </condition_list>
+    <slot_list>
+      <slot name="lcd_brightness" enabled="true" param="-"/>
+    </slot_list>
+  </signal>
+
+  <signal name="profile_activated" enabled="true">
+    <slot_list>
+      <slot name="smp_plug_exe" enabled="true" param="Loaded default!"/>
+    </slot_list>
+  </signal>
+
+</profile>
