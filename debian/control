@@ -1,0 +1,23 @@
+Source: powermanx
+Section: utils
+Priority: optional
+Maintainer: Alessio Ababilov <ilovegnulinux@gmail.com>
+Build-Depends: debhelper (>= 7),
+               autotools-dev,
+               libglib2.0-dev (>= 2.24),
+               libgtk-3-dev (>= 3.1),
+               libdbus-1-dev (>= 1.5),
+               libdbus-glib-1-dev (>= 0.70),
+               libupower-glib-dev (>= 0.9),
+               libxss-dev,
+               libjsoncpp-dev
+Standards-Version: 3.9.2
+Vcs-Git: git://github.com/aababilov/powermanx.git
+Vcs-Browser: http://github.com/aababilov/powermanx
+Homepage: http://github.com/aababilov/powermanx
+
+Package: powermanx
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends}
+Description: Extensible power manager

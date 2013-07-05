@@ -48,3 +48,10 @@ Makefile
 /config.sub
 
 /stamp-h1
+
+# debian
+/debian/tmp/
+/debian/powermanx/
+/debian/files
+/debian/powermanx*.debhelper*
+/debian/powermanx*.substvars
