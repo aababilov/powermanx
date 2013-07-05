@@ -1,0 +1,44 @@
+# Copyright 1999-2013 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: $
+
+EAPI="5"
+
+EGIT_REPO_URI="git://github.com/aababilov/powermanx.git"
+
+inherit autotools git-2
+
+DESCRIPTION="Extensible power manager"
+HOMEPAGE="http://github.com/aababilov/powermanx"
+
+LICENSE="GPL-3+"
+SLOT="0"
+KEYWORDS="~amd64 ~x86"
+IUSE=""
+
+RDEPEND=""
+DEPEND="${RDEPEND}
+		>=dev-libs/glib-2.24
+		>=x11-libs/gtk+-3.1:3
+		>=sys-apps/dbus-1.5
+		>=dev-libs/dbus-glib-0.70
+		>=sys-power/upower-0.9
+		x11-libs/libXScrnSaver
+		dev-libs/jsoncpp
+"
+
+src_prepare() {
+	if [[ ! -e configure ]]; then
+		eautoreconf
+	else
+		elibtoolize
+	fi
+}
+
+src_configure() {
+	econf
+}
+
+src_install() {
+	emake DESTDIR="${D}" install
+}
