@@ -40,20 +40,6 @@ public:
 	virtual	void reload_params();
 };
 
-class slot_lcd_brightness_t: public slot_plugin_t {
-public:
-	slot_lcd_brightness_t();
-	virtual void activate(const char *param);
-private:
-	bool get_hw(int &val);
-	bool set_hw(int val);
-
-	int last_set_hw;
-	int levels;
-	bool does_own_updates;
-	std::string udi;
-};
-
 class slot_dim_t: public slot_plugin_t {
 public:
 	slot_dim_t();
@@ -70,7 +56,8 @@ private:
 	bool act;
 };
 
-class signal_hotkey_t: public signal_plugin_t, public hal_listener_t {
+/*
+class signal_hotkey_t: public signal_plugin_t {
 public:
 	signal_hotkey_t();
 	virtual signal_settings_t settings_type() const { return SETTINGS_HOTKEY; }
@@ -93,6 +80,7 @@ public:
 		const char *condition_detail);
 
 };
+*/
 
 class signal_idle_t: public signal_plugin_t {
 public:

@@ -14,6 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <gtk/gtk.h>
+
 #include "status_icon.hpp"
 #include "app_utils.hpp"
 
@@ -23,93 +25,85 @@ using namespace std;
 
 pmx_status_icon_t::pmx_status_icon_t(GtkBuilder *builder)
 {
-	register_event_list(
-		(1 << EVENT_HAL_DEVICE_PRESENCE) |
-		(1 << EVENT_HAL_DEVICE_CAPABILITY) |
-		(1 << EVENT_HAL_DEVICE_PROPERTY_MODIFIED) |
-		(1 << EVENT_HAL_DEVICE_CONDITION));
+	g_signal_connect(
+		glob_up_client,
+		"device-changed",
+		G_CALLBACK(on_upower_device_changed),
+		this);
+	g_signal_connect(
+		glob_up_client,
+		"device-added",
+		G_CALLBACK(on_upower_device_added),
+		this);
+	g_signal_connect(
+		glob_up_client,
+		"device-removed",
+		G_CALLBACK(on_upower_device_removed),
+		this);
+
 	create_menu_settings();
 	create_menu_slots();
 
 	SET_OBJECT(status_icon);
- 	gtk_status_icon_set_tooltip(status_icon, "Power Manager Extensible");
+ 	gtk_status_icon_set_tooltip_text(status_icon, "Power Manager Extensible");
  	CONNECT_SIGNAL(status_icon, popup_menu);
 	CONNECT_SIGNAL(status_icon, activate);
 
 	create_status_icon();
 
-	int num_batteries;
-	char **batteries_list = libhal_find_device_by_capability(
-		glob_hal_ctx,
-		"battery",
-		&num_batteries,
-		NULL);
-	if (batteries_list) {
-		for (int i = 0; i < num_batteries; ++i)
-			batteries.insert(batteries_list[i]);
-		libhal_free_string_array(batteries_list);
+	up_client_enumerate_devices_sync(glob_up_client, NULL, NULL);
+	GPtrArray *devices = up_client_get_devices(glob_up_client);
+	for (guint i = 0; i < devices->len; i++) {
+		battery_add((UpDevice*)g_ptr_array_index(devices, i));
 	}
+	g_ptr_array_unref(devices);
 
 	icon_changed();
 	profile_edit = new pmx_profile_edit_t(builder, this);
 }
 
 void
-pmx_status_icon_t::on_hal_device_presence(
-	const char *udi,
-	bool present)
+pmx_status_icon_t::battery_add(UpDevice *device)
 {
-	if (present) {
-		DBusError error;
-		dbus_error_init(&error);
-		bool is_battery = libhal_device_query_capability(
-			    glob_hal_ctx,
-			    udi,
-			    "battery",
-			    &error);
-		if (dbus_error_is_set(&error)) {
-			dbus_error_free(&error);
-		} else if (is_battery) {
-			batteries.insert(udi);
-			icon_changed();
-		}
-	} else {
-		set<string>::iterator i = batteries.find(udi);
-		if (i != batteries.end()) {
-			batteries.erase(i);
-			icon_changed();
-		}
+	UpDeviceKind kind;
+	g_object_get(G_OBJECT(device), "kind", &kind, NULL);
+	if (kind == UP_DEVICE_KIND_BATTERY) {
+		const char *path = up_device_get_object_path(device);
+		print_debug("battery: %s", path);
+		batteries.insert(path);
 	}
 }
 
 void
-pmx_status_icon_t::on_hal_device_capability(
-	const char *udi,
-	const char *capability,
-	bool present)
+pmx_status_icon_t::on_upower_device_changed(
+	UpClient *client,
+	UpDevice *device,
+	gpointer user_data)
 {
+	pmx_status_icon_t *icon = static_cast<pmx_status_icon_t*>(user_data);
+	icon->icon_changed();
 }
 
 void
-pmx_status_icon_t::on_hal_device_property_modified(
-	const char *udi,
-	const char *key,
-	dbus_bool_t is_removed,
-	dbus_bool_t is_added)
+pmx_status_icon_t::on_upower_device_added(
+	UpClient *client,
+	UpDevice *device,
+	gpointer user_data)
 {
-	if (!strcmp(key, "battery.charge_level.percentage")
-	    || !strcmp(key, "battery.rechargeable.is_charging")
-	    || !strcmp(key, "ac_adapter.present")) {
-		icon_changed();
-	}
+	pmx_status_icon_t *icon = static_cast<pmx_status_icon_t*>(user_data);
+	icon->battery_add(device);
+	icon->icon_changed();
 }
 
 void
-pmx_status_icon_t::on_hal_device_condition(
-	const char *udi,
-	const char *condition_name,
-	const char *condition_detail)
+pmx_status_icon_t::on_upower_device_removed(
+	UpClient *client,
+	UpDevice *device,
+	gpointer user_data)
 {
+	pmx_status_icon_t *icon = static_cast<pmx_status_icon_t*>(user_data);
+	icon->batteries.erase(up_device_get_object_path(device));
+	icon->icon_changed();
 }
 
 static const gchar *
@@ -134,94 +128,56 @@ pmx_status_icon_t::icon_changed()
 {
 	string icon_name;
 	bool adapter_present = false;
-	int highest_percent = 0;
-	int num_adapters;
-	char **adapters;
-	DBusError error;
+	double highest_percentage = 0;
 
 	if (batteries.size() == 0) {
 		gtk_status_icon_set_from_icon_name(
 			status_icon,
 			"pmx-ac-adapter");
-		gtk_status_icon_set_tooltip(
+		gtk_status_icon_set_tooltip_text(
 			status_icon,
 			_("On AC power\nNo battery"));
 		return;
 	}
 
-	dbus_error_init(&error);
-
-	adapters = libhal_find_device_by_capability(
-		glob_hal_ctx,
-		"ac_adapter",
-		&num_adapters,
-		NULL);
-	if (adapters) {
-		for (int i = 0; i < num_adapters; ++i) {
-			dbus_bool_t present = libhal_device_get_property_bool(
-				glob_hal_ctx,
-				adapters[i],
-				"ac_adapter.present",
-				&error);
-			if (dbus_error_is_set(&error)) {
-				dbus_error_free(&error);
-			} else if (present) {
-				adapter_present = true;
-				break;
-			}
-		}
-		libhal_free_string_array(adapters);
-	}
-
+	adapter_present = !up_client_get_on_battery(glob_up_client);
+	UpDevice *battery = up_device_new();
 	FOREACH_CONST (set<string>, i, batteries) {
-		int percent = libhal_device_get_property_int(
-			glob_hal_ctx,
-			i->c_str(),
-			"battery.charge_level.percentage",
-			&error);
-		if (dbus_error_is_set(&error)) {
-			dbus_error_free(&error);
-		} else  {
-			if (adapter_present) {
-				dbus_bool_t is_charging =
-					libhal_device_get_property_bool(
-						glob_hal_ctx,
-						i->c_str(),
-						"battery.rechargeable.is_charging",
-						&error);
-				if (dbus_error_is_set(&error)) {
-					dbus_error_free(&error);
-				} else if (!is_charging) {
-					gtk_status_icon_set_from_icon_name(
-						status_icon,
-						"pmx-primary-charged");
-					char *msg = g_strdup_printf(
-						_("On AC power\nBattery is fully charged (%d%%)"),
-						percent);
-					gtk_status_icon_set_tooltip(
-						status_icon,
-						msg);
-					g_free(msg);
-					return;
-				}
-			}
-
-			if (highest_percent < percent)
-				highest_percent = percent;
+		print_debug("fr bat: %s", i->c_str());
+		if (!up_device_set_object_path_sync(battery, i->c_str(), NULL, NULL))
+			continue;
+		double percentage;
+		UpDeviceState state;
+		g_object_get(battery, "state", &state, "percentage", &percentage, NULL);
+		if (adapter_present && state == UP_DEVICE_STATE_FULLY_CHARGED) {
+			gtk_status_icon_set_from_icon_name(
+				status_icon,
+				"pmx-primary-charged");
+			char *msg = g_strdup_printf(
+				_("On AC power\nBattery is fully charged (%.0lf%%)"),
+				percentage);
+			gtk_status_icon_set_tooltip_text(
+				status_icon,
+				msg);
+			g_free(msg);
+			return;
 		}
+
+		if (highest_percentage < percentage)
+			highest_percentage = percentage;
 	}
 
 	icon_name = string("pmx-primary-") +
-		get_icon_index(highest_percent)
+		get_icon_index(highest_percentage)
 		+ (adapter_present ? "-charging":"");
 	gtk_status_icon_set_from_icon_name(
 		status_icon,
 		icon_name.c_str());
 	char *msg = g_strdup_printf(
-		_("On %s power\nBattery level is %d%%"),
+		_("On %s power\nBattery level is %.0lf%%"),
 		adapter_present ? _("AC") : _("battery"),
-		highest_percent);
-	gtk_status_icon_set_tooltip(
+		highest_percentage);
+	gtk_status_icon_set_tooltip_text(
 		status_icon,
 		msg);
 	g_free(msg);

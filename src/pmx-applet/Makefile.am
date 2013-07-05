@@ -3,8 +3,8 @@ include $(top_srcdir)/common.src.mk
 
 bin_PROGRAMS = pmx-applet
 
-INCLUDES =				\
-	$(common_INCLUDES)		\
+AM_CPPFLAGS =				\
+	$(common_AM_CPPFLAGS)		\
 	-DPKGDATADIR=\"$(pkgdatadir)\"	\
 	$(GTK_CFLAGS)
 

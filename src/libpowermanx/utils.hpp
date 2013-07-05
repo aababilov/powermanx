@@ -21,11 +21,15 @@
 #include <map>
 #include <set>
 #include <cstring>
-#include <glib.h>
-#include <hal/libhal.h>
+
 #include <dirent.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+
+#include <glib.h>
+#include <dbus/dbus.h>
+#include <libupower-glib/upower.h>
+
 
 // foreach
 #define FOREACH(type, i, cont)					\
@@ -141,83 +145,20 @@ protected:
 		named_object_t<type>::map_t()
 
 
-enum signal_event_t {
-	EVENT_HOTKEY,
-	EVENT_HAL_DEVICE_PRESENCE,
-	EVENT_HAL_DEVICE_CAPABILITY,
-	EVENT_HAL_DEVICE_PROPERTY_MODIFIED,
-	EVENT_HAL_DEVICE_CONDITION,
-	EVENT_LAST,
-};
+#define glob_dbus_conn (dbus_provider_t::dbus_conn())
+#define glob_up_client (dbus_provider_t::up_client())
 
-#define glob_hal_ctx (hal_provider_t::hal_ctx())
-#define glob_dbus_conn (hal_provider_t::dbus_conn())
-
-class hal_listener_t;
-
-class hal_provider_t {
-	friend class hal_listener_t;
+class dbus_provider_t {
 public:
-	static LibHalContext *hal_ctx() { return m_hal_ctx; }
 	static DBusConnection *dbus_conn() { return m_dbus_conn; }
+	static UpClient *up_client() { return m_up_client; }
 
 	static void init();
 	static void fini();
 private:
-	static void on_hal_device_added(LibHalContext *ctx,
-					const char *udi);
-	static void on_hal_device_removed(LibHalContext *ctx,
-					  const char *udi);
-	static void on_hal_device_new_capability(LibHalContext *ctx,
-						 const char *udi,
-						 const char *capability);
-	static void on_hal_device_lost_capability(LibHalContext *ctx,
-						  const char *udi,
-						  const char *capability);
-	static void on_hal_device_property_modified(LibHalContext *ctx,
-						    const char *udi,
-						    const char *key,
-						    dbus_bool_t is_removed,
-						    dbus_bool_t is_added);
-	static void on_hal_device_condition(LibHalContext *ctx,
-					    const char *udi,
-					    const char *condition_name,
-					    const char *condition_detail);
-
-	typedef std::set<hal_listener_t *> listener_list_t;
-	static listener_list_t listeners[EVENT_LAST];
-
-	static LibHalContext *m_hal_ctx;
 	static DBusConnection *m_dbus_conn;
+	static UpClient *m_up_client;
 };
 
-class hal_listener_t {
-public:
-	hal_listener_t();
-	~hal_listener_t();
-
-	void register_event(signal_event_t event);
-	void register_event_list(int event_list);
-	void unregister_listener();
-
-	virtual void on_hal_device_presence(
-		const char *udi,
-		bool present) = 0;
-	virtual void on_hal_device_capability(
-		const char *udi,
-		const char *capability,
-		bool present) = 0;
-	virtual void on_hal_device_property_modified(
-		const char *udi,
-		const char *key,
-		dbus_bool_t is_removed,
-		dbus_bool_t is_added) = 0;
-	virtual void on_hal_device_condition(
-		const char *udi,
-		const char *condition_name,
-		const char *condition_detail) = 0;
-private:
-	int m_std_events;
-};
 
 #endif

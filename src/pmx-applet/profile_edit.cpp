@@ -14,13 +14,17 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#include <set>
+
+#include <gtk/gtk.h>
+
+#include <libpowermanx/libpowermanx.hpp>
+
 #include "profile_edit.hpp"
 #include "status_icon.hpp"
 #include "app_utils.hpp"
 
-#include <libpowermanx/libpowermanx.hpp>
-
-#include <set>
 
 using namespace std;
 
@@ -375,8 +379,9 @@ void on_slot_selection_changed(GtkTreeSelection *selection, gpointer user_data)
 	g_object_set(ren_slot_param, "editable",
 		     curr_slot->plugin()->has_param(), NULL);
 	if (curr_slot->plugin()->has_param()) {
-		ren_slot_param->has_entry =
-			curr_slot->plugin()->any_param();
+		g_object_set(G_OBJECT(ren_slot_param),
+			     "has_entry", (gboolean)curr_slot->plugin()->any_param(),
+			     NULL);
 	} else {
 		return;
 	}
@@ -584,8 +589,8 @@ void store_curr_signal()
 		}
 		break;
 	case SETTINGS_HOTKEY:
-		char *key_name;
-		key_name = gtk_combo_box_get_active_text(
+		const char *key_name;
+		key_name = gtk_combo_box_get_active_id(
 			GTK_COMBO_BOX(val_hotkey));
 		if (!key_name) {
 			hotkey_signal->key_name() = "";
@@ -596,7 +601,6 @@ void store_curr_signal()
 			hotkey_signal->key_name() = key_name;
 			set_edited();
 		}
-		free(key_name);
 		break;
 	case SETTINGS_VOID:
 		break;
@@ -708,7 +712,7 @@ pmx_profile_edit_t::pmx_profile_edit_t(
 	SET_OBJECT(val_int_to);
 	SET_OBJECT(box_hotkey);
 	SET_OBJECT(val_hotkey);
-	gtk_combo_box_entry_set_text_column(GTK_COMBO_BOX_ENTRY(val_hotkey), 0);
+	gtk_combo_box_set_entry_text_column(GTK_COMBO_BOX(val_hotkey), 0);
 
 	SET_OBJECT(store_hotkey);
 	SET_OBJECT(btn_profile_add);

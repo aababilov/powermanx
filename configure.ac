@@ -17,10 +17,6 @@ AC_ARG_WITH([dbus-sys],
         AS_HELP_STRING([--with-dbus-sys=<dir>],
                 [where D-BUS system.d directory is]))
 
-AC_ARG_WITH([pid-file],
-        AS_HELP_STRING([--with-pid-file=<file>],
-                [PID file for PMX daemon]))
-
 if test "$GCC" = "yes"; then
     CPPFLAGS="$CPPFLAGS -Wcast-align -Wno-uninitialized -Wall -Wformat-security"
 fi
@@ -28,18 +24,20 @@ fi
 dnl ---------------------------------------------------------------------------
 dnl - Library dependencies
 dnl ---------------------------------------------------------------------------
-GLIB_REQUIRED=2.13.0
-GTK_REQUIRED=2.12.0
-HAL_REQUIRED=0.5.8
-DBUS_REQUIRED=0.70
+GLIB_REQUIRED=2.24
+GTK_REQUIRED=3.1
+DBUS_REQUIRED=1.5
+DBUS_GLIB_REQUIRED=0.70
+UPOWER_REQUIRED=0.9
 
 dnl ---------------------------------------------------------------------------
 dnl - Make above strings available for packaging files (e.g. rpm spec files)
 dnl ---------------------------------------------------------------------------
 AC_SUBST(GLIB_REQUIRED)
 AC_SUBST(GTK_REQUIRED)
-AC_SUBST(HAL_REQUIRED)
 AC_SUBST(DBUS_REQUIRED)
+AC_SUBST(DBUS_GLIB_REQUIRED)
+AC_SUBST(UPOWER_REQUIRED)
 
 dnl ---------------------------------------------------------------------------
 dnl - Check library dependencies
@@ -48,25 +46,27 @@ PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_REQUIRED gobject-2.0 gmodule-2.0)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 
-PKG_CHECK_MODULES(HAL, hal >= $HAL_REQUIRED)
-AC_SUBST(HAL_CFLAGS)
-AC_SUBST(HAL_LIBS)
+PKG_CHECK_MODULES(GTK, gtk+-3.0 >= $GTK_REQUIRED)
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
+
+PKG_CHECK_MODULES(DBUS,[
+ dbus-1 >= $DBUS_REQUIRED
+ dbus-glib-1 >= $DBUS_GLIB_REQUIRED
+ gthread-2.0])
+AC_SUBST(DBUS_CFLAGS)
+AC_SUBST(DBUS_LIBS)
+
+PKG_CHECK_MODULES(UPOWER, upower-glib >= $UPOWER_REQUIRED)
+AC_SUBST(UPOWER_CFLAGS)
+AC_SUBST(UPOWER_LIBS)
 
 PKG_CHECK_MODULES(XSCRNSAVER, xscrnsaver)
 AC_SUBST(XSCRNSAVER_CFLAGS)
 AC_SUBST(XSCRNSAVER_LIBS)
 
-PKG_CHECK_MODULES(DBUS,[
- dbus-glib-1 >= $DBUS_REQUIRED
- dbus-1 >= $DBUS_REQUIRED
- gthread-2.0])
-AC_SUBST(DBUS_CFLAGS)
-AC_SUBST(DBUS_LIBS)
-
-PKG_CHECK_MODULES(GTK, [
- gtk+-2.0 >= $GTK_REQUIRED])
-AC_SUBST(GTK_CFLAGS)
-AC_SUBST(GTK_LIBS)
+AC_SUBST(JSONCPP_CFLAGS, -I/usr/include/jsoncpp)
+AC_SUBST(JSONCPP_LIBS, -ljsoncpp)
 
 
 if ! test -z "$with_dbus_sys" ; then
@@ -76,14 +76,6 @@ else
 fi
 AC_SUBST(DBUS_SYS_DIR)
 
-
-if ! test -z "$with_pid_file" ; then
-    PMXD_PID_FILE="$with_pid_file"
-else
-    PMXD_PID_FILE="${localstatedir}/run/pmx-daemon.pid"
-fi
-
-AC_SUBST(PMXD_PID_FILE)
 
 AC_OUTPUT([Makefile
 	src/Makefile

@@ -7,9 +7,8 @@ BUILT_SOURCES = pm_svr_bindings.h
 
 sbin_PROGRAMS = pmx-daemon
 
-INCLUDES =					\
-	$(common_INCLUDES)			\
-	-DPMXD_PID_FILE=\""$(PMXD_PID_FILE)"\"
+AM_CPPFLAGS =					\
+	$(common_AM_CPPFLAGS)
 
 pmx_daemon_LDADD = 			\
 	$(common_LDADD)			\
@@ -17,6 +16,8 @@ pmx_daemon_LDADD = 			\
 
 pmx_daemon_SOURCES =			\
 	main.cpp			\
+	xpm_manager.cpp			\
+	xpm_manager.hpp			\
 	pm_svr_bindings.h
 
 pm_svr_bindings.h: servicename-infos.xml

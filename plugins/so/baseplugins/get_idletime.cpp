@@ -627,7 +627,7 @@ event_callback(GIOChannel *channel, GIOCondition condition, gpointer data)
 	last_input_event = time(NULL);
 	return TRUE;
 }
-
+/*
 GIOChannel* add_listener(const char *udi)
 {
 	GIOChannel *chan;
@@ -774,7 +774,7 @@ input_dev_notifier_t::on_hal_device_condition(
 		const char *condition_detail)
 {
 }
-
+*/
 #if 0
 
 int get_xidletime()
@@ -892,5 +892,5 @@ void init_get_idletime()
 	inited = true;
 
 	g_timeout_add_seconds(4, km_timer_callback, NULL);
-	new input_dev_notifier_t();
+	//new input_dev_notifier_t();
 }

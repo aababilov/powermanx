@@ -15,7 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <libpowermanx/utils.hpp>
-#include <libpowermanx/signal_hal.hpp>
 #include <libpowermanx/slot_exe.hpp>
 #include <libpowermanx/profile.hpp>
 #include <gmodule.h>
@@ -36,14 +35,14 @@ static void load_lib(const char *full_name,
 
 void libpowermanx_init()
 {
-	static bool inited = false;
+	static bool initialized = false;
 
-	if (inited)
+	if (initialized)
 		return;
-	inited = true;
+	initialized = true;
 
-	hal_provider_t::init();
-	signal_hal_t::init();
+	g_type_init();
+	dbus_provider_t::init();
 	slot_exe_t::init();
 	foreach_file(PLUGINSODIR, load_lib);
 

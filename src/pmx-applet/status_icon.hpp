@@ -24,26 +24,9 @@
 
 #include "profile_edit.hpp"
 
-class pmx_status_icon_t: public hal_listener_t {
+class pmx_status_icon_t {
 public:
 	pmx_status_icon_t(GtkBuilder *builder);
-
-	virtual void on_hal_device_presence(
-		const char *udi,
-		bool present);
-	virtual void on_hal_device_capability(
-		const char *udi,
-		const char *capability,
-		bool present);
-	virtual void on_hal_device_property_modified(
-		const char *udi,
-		const char *key,
-		dbus_bool_t is_removed,
-		dbus_bool_t is_added);
-	virtual void on_hal_device_condition(
-		const char *udi,
-		const char *condition_name,
-		const char *condition_detail);
 
 	void icon_changed();
 	void profiles_changed();
@@ -57,6 +40,20 @@ private:
 	void create_menu_settings();
 	void create_menu_slots();
 	void create_status_icon();
+	void battery_add(UpDevice *device);
+
+	static void on_upower_device_changed(
+		UpClient *client,
+		UpDevice *device,
+		gpointer user_data);
+	static void on_upower_device_added(
+		UpClient *client,
+		UpDevice *device,
+		gpointer user_data);
+	static void on_upower_device_removed(
+		UpClient *client,
+		UpDevice *device,
+		gpointer user_data);
 
 	static void on_status_icon_popup_menu(
 		GtkStatusIcon *status_icon,

@@ -766,8 +766,9 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkComboBoxEntry" id="val_hotkey">
+                                      <object class="GtkComboBox" id="val_hotkey">
                                         <property name="visible">True</property>
+                                        <property name="has-entry">True</property>
                                         <property name="model">store_hotkey</property>
                                       </object>
                                       <packing>
@@ -1034,7 +1035,6 @@
     <property name="window_position">center-on-parent</property>
     <property name="type_hint">dialog</property>
     <property name="transient_for">profile_edit_win</property>
-    <property name="has_separator">False</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox1">
         <property name="visible">True</property>
@@ -1124,7 +1124,6 @@
     <property name="window_position">center-on-parent</property>
     <property name="type_hint">dialog</property>
     <property name="transient_for">profile_edit_win</property>
-    <property name="has_separator">False</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox2">
         <property name="visible">True</property>

@@ -234,23 +234,21 @@ void slot_srsh_t::activate(const char *param)
 {
 	DBusMessage *message, *result;
 	DBusError error;
-	int wake_up = 0;
 
 	print_debug("try %s...", action.c_str());
-	if (!strcmp(action.c_str(), "Suspend")) {
+	if (action == "Suspend" || action == "Hibernate") {
 		message = dbus_message_new_method_call(
-			"org.freedesktop.Hal",
-			"/org/freedesktop/Hal/devices/computer",
-			"org.freedesktop.Hal.Device.SystemPowerManagement",
-			"Suspend");
-		dbus_message_append_args(message, DBUS_TYPE_INT32, &wake_up, DBUS_TYPE_INVALID);
-	} else {
-		//shutdown, reboot, hibernate
-		message = dbus_message_new_method_call(
-			"org.freedesktop.Hal",
-			"/org/freedesktop/Hal/devices/computer",
-			"org.freedesktop.Hal.Device.SystemPowerManagement",
+			"org.freedesktop.UPower",
+			"/org/freedesktop/UPower",
+			"org.freedesktop.UPower",
 			action.c_str());
+	} else {
+		// shutdown, reboot
+		message = dbus_message_new_method_call(
+			"org.freedesktop.ConsoleKit",
+			"/org/freedesktop/ConsoleKit/Manager",
+			"org.freedesktop.ConsoleKit.Manager",
+			action == "Reboot" ? "Reboot": "Stop");
 	}
 	dbus_error_init(&error);
 	result = dbus_connection_send_with_reply_and_block(glob_dbus_conn, message, -1, &error);
@@ -301,120 +299,6 @@ gpm_discrete_to_percent (guint discrete, guint levels)
 		return 0;
 	}
 	return (guint) ((gfloat) discrete * (100.0f / (gfloat) (levels - 1)));
-}
-
-slot_lcd_brightness_t::slot_lcd_brightness_t()
-	: slot_plugin_t("lcd_brightness")
-{
-	set_has_param(true);
-	char** panels;
-	int num_devices = 0;
-	DBusError error;
-	panels = libhal_find_device_by_capability(
-		glob_hal_ctx, "laptop_panel", &num_devices, NULL);
-	if (num_devices == 0) {
-		print_debug("Couldn't find laptop_panel");
-		return;
-	}
-	udi = panels[0];
-	libhal_free_string_array(panels);
-
-	levels = libhal_device_get_property_int(glob_hal_ctx, udi.c_str(),
-						"laptop_panel.num_levels", NULL);
-	dbus_error_init(&error);
-	does_own_updates = libhal_device_get_property_bool(glob_hal_ctx, udi.c_str(),
-							   "laptop_panel.brightness_in_hardware", &error);
-	if (dbus_error_is_set(&error)) {
-		does_own_updates = false;
-		dbus_error_free(&error);
-	}
-	get_hw(last_set_hw);
-	m_avail_params.push_back("+");
-	m_avail_params.push_back("-");
-	for (int i = 0; i <= 100; i += 5) {
-		char buf[8];
-		sprintf(buf, "%d %%", i);
-		m_avail_params.push_back(buf);
-	}
-}
-
-bool
-slot_lcd_brightness_t::get_hw(int &val)
-{
-	DBusMessage *message, *result;
-	DBusError error;
-	message = dbus_message_new_method_call("org.freedesktop.Hal",
-					       udi.c_str(),
-					       "org.freedesktop.Hal.Device.LaptopPanel",
-					       "GetBrightness");
-	dbus_error_init(&error);
-	result = dbus_connection_send_with_reply_and_block(glob_dbus_conn, message, -1, &error);
-	if (dbus_error_is_set(&error)) {
-		print_debug("Couldn't send dbus message: %s",
-			    error.message);
-		dbus_error_free(&error);
-		return false;
-	}
-	dbus_message_get_args(result, &error, DBUS_TYPE_INT32, &val, DBUS_TYPE_INVALID);
-	if (dbus_error_is_set(&error)) {
-		print_debug("Couldn't get brightness: %s",
-			    error.message);
-		dbus_error_free(&error);
-		dbus_message_unref(result);
-		return false;
-	}
-	dbus_message_unref(result);
-	return true;
-}
-
-bool slot_lcd_brightness_t::set_hw(int val)
-{
-	DBusMessage *message, *result;
-	DBusError error;
-	message = dbus_message_new_method_call(
-		"org.freedesktop.Hal",
-		udi.c_str(),
-		"org.freedesktop.Hal.Device.LaptopPanel",
-		"SetBrightness");
-	print_debug("set bri: %d", val);
-	dbus_message_append_args(message, DBUS_TYPE_INT32, &val, DBUS_TYPE_INVALID);
-	dbus_error_init(&error);
-	result = dbus_connection_send_with_reply_and_block(glob_dbus_conn, message, -1, &error);
-	if (dbus_error_is_set(&error)) {
-		print_debug("Couldn't send dbus message: %s",
-			    error.message);
-		dbus_error_free(&error);
-		return false;
-	}
-	last_set_hw = val;
-	dbus_message_unref(result);
-	return true;
-}
-
-void slot_lcd_brightness_t::activate(const char *param)
-{
-	if (param[0] == '\0' || udi.empty())
-		return;
-	if (isdigit(param[0])) {
-		set_hw(gpm_percent_to_discrete(atoi(param), levels));
-		return;
-	}
-	//otherwise inc/dec
-	int current_hw;
-	get_hw(current_hw);
-	/* the panel has been updated in firmware */
-	if (current_hw != last_set_hw || does_own_updates) {
-		last_set_hw = current_hw;
-		return;
-	}
-	/* macbook pro has a bazzillion brightness levels, be a bit clever */
-	guint step = gpm_brightness_get_step(levels);
-	int new_val = param[0] == '+' ? last_set_hw + step : last_set_hw - step;
-	if (new_val > levels - 1)
-		new_val = levels - 1;
-	else if (new_val < 0)
-		new_val = 0;
-	set_hw(new_val);
 }
 
 //slot_dim_t
@@ -503,6 +387,7 @@ signal_activate_t::disable(signal_record_t *rec)
 }
 
 // signal_hotkey_t
+/*
 signal_hotkey_t::signal_hotkey_t()
 	:signal_plugin_t("hotkey")
 {
@@ -550,15 +435,15 @@ signal_hotkey_t::on_hal_device_condition(
 		}
 	}
 }
-
+*/
 extern "C" const gchar *G_MODULE_EXPORT
 g_module_check_init(GModule *module)
 {
-	static bool inited = false;
+	static bool initialized = false;
 
-	if (inited)
+	if (initialized)
 		return NULL;
-	inited = true;
+	initialized = true;
 
 	new slot_exec_t();
 	new slot_srsh_t("suspend");
@@ -566,13 +451,12 @@ g_module_check_init(GModule *module)
 	new slot_srsh_t("shutdown");
 	new slot_srsh_t("reboot");
 	new slot_change_profile_t();
-	new slot_lcd_brightness_t();
 	new slot_dim_t();
 
 	new signal_activate_t(true);
 	new signal_activate_t(false);
 	new signal_idle_t();
-	new signal_hotkey_t();
+//	new signal_hotkey_t();
 
 	return NULL;
 }

@@ -3,13 +3,13 @@ DEFS =						\
 	-DBINDIR=\"$(bindir)\"			\
 	-DDATADIR=\"$(datadir)\"
 
-common_INCLUDES = 				\
+common_AM_CPPFLAGS = 				\
 	-I$(top_srcdir)/src			\
 	$(GLIB_CFLAGS) 				\
-	$(HAL_CFLAGS)				\
+	$(UPOWER_CFLAGS)			\
 	$(DBUS_CFLAGS)
 
 common_LDADD = 					\
 	$(GLIB_LIBS)				\
-	$(HAL_LIBS)				\
+	$(UPOWER_LIBS)				\
 	$(DBUS_LIBS)

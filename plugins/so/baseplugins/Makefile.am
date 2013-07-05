@@ -3,7 +3,7 @@ include $(top_srcdir)/common.src.mk
 
 pluginso_LTLIBRARIES = baseplugins.la
 
-INCLUDES = $(common_INCLUDES)		\
+AM_CPPFLAGS = $(common_AM_CPPFLAGS)		\
         $(XSCRNSAVER_CFLAGS)
 
 baseplugins_la_SOURCES = 		\
