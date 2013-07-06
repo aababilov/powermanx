@@ -106,7 +106,6 @@ pmx_status_icon_t::battery_add(UpDevice *device)
 	g_object_get(G_OBJECT(device), "kind", &kind, NULL);
 	if (kind == UP_DEVICE_KIND_BATTERY) {
 		const char *path = up_device_get_object_path(device);
-		print_debug("battery: %s", path);
 		batteries.insert(path);
 		return true;
 	}

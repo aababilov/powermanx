@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <profile>
-  <signal name="ac_adapter" enabled="true" timeout="2">
+  <signal name="line_power" enabled="true" timeout="2">
     <condition_list>
       <condition key="on_sig_value" value="true"/>
     </condition_list>
@@ -9,7 +9,7 @@
       <slot name="change_profile" enabled="true" param="ac_power"/>
     </slot_list>
   </signal>
-  <signal name="ac_adapter" enabled="true" timeout="2">
+  <signal name="line_power" enabled="true" timeout="2">
     <condition_list>
       <condition key="on_sig_value" value="false"/>
     </condition_list>

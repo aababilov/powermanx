@@ -82,6 +82,28 @@ public:
 };
 */
 
+class signal_line_power_t: public signal_plugin_t {
+public:
+	signal_line_power_t();
+	virtual signal_settings_t settings_type() const { return SETTINGS_BOOL; }
+private:
+	static void up_client_on_battery_cb(
+		UpClient *client,
+		GParamSpec *pspec,
+		signal_line_power_t *signal);
+};
+
+class signal_battery_percent_t: public signal_plugin_t {
+public:
+	signal_battery_percent_t();
+	virtual signal_settings_t settings_type() const { return SETTINGS_BOOL; }
+private:
+	static void on_upower_device_changed(
+		UpClient *client,
+		UpDevice *device,
+		signal_battery_percent_t *signal);
+};
+
 class signal_idle_t: public signal_plugin_t {
 public:
 	signal_idle_t();

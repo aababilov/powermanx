@@ -1,0 +1,41 @@
+#!/bin/bash
+
+brightness_dir=""
+
+check_device()
+{
+    brightness_dir=""
+    for i in /sys/class/backlight/*; do
+        if [ -f "$i/brightness" ]; then
+            brightness_dir=$i
+            break
+        fi
+    done
+    if [ -z "$brightness_dir" ]; then
+        echo "backlight device is not found!" >&2
+        exit 1
+    fi
+}
+
+case "$1" in
+    has_param)
+	echo yes
+	exit 0
+	;;
+    set)
+        check_device
+        echo "$2" > $brightness_dir/brightness
+        exit 0
+	;;
+    any_param)
+	echo no
+	exit 0
+	;;
+    avail_params)
+        check_device
+        for ((i = 0; i <= $(cat $brightness_dir/max_brightness); ++i)); do
+            echo $i
+        done
+        exit 0
+	;;
+esac

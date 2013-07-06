@@ -436,6 +436,49 @@ signal_hotkey_t::on_hal_device_condition(
 	}
 }
 */
+
+signal_line_power_t::signal_line_power_t()
+	: signal_plugin_t("line_power")
+{
+	g_signal_connect(glob_up_client, "notify::on-battery",
+			 G_CALLBACK (up_client_on_battery_cb), this);
+}
+
+void
+signal_line_power_t::up_client_on_battery_cb(
+	UpClient *client,
+	GParamSpec *pspec,
+	signal_line_power_t *signal)
+{
+        signal->new_bool(up_client_get_on_battery(glob_up_client));
+}
+
+signal_battery_percent_t::signal_battery_percent_t()
+	: signal_plugin_t("battery_percent")
+{
+	g_signal_connect(
+		glob_up_client,
+		"device-changed",
+		G_CALLBACK(on_upower_device_changed),
+		this);
+}
+
+void
+signal_battery_percent_t::on_upower_device_changed(
+	UpClient *client,
+	UpDevice *device,
+	signal_battery_percent_t *signal)
+{
+	UpDeviceKind kind;
+	g_object_get(G_OBJECT(device), "kind", &kind, NULL);
+	if (kind == UP_DEVICE_KIND_BATTERY) {
+		double percentage;
+		g_object_get(G_OBJECT(device), "percentage", &percentage, NULL);
+		signal->new_int(percentage);
+	}
+
+}
+
 extern "C" const gchar *G_MODULE_EXPORT
 g_module_check_init(GModule *module)
 {
@@ -456,6 +499,8 @@ g_module_check_init(GModule *module)
 	new signal_activate_t(true);
 	new signal_activate_t(false);
 	new signal_idle_t();
+	new signal_line_power_t();
+	new signal_battery_percent_t();
 //	new signal_hotkey_t();
 
 	return NULL;
