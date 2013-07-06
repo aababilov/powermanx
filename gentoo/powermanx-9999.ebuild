@@ -25,6 +25,7 @@ DEPEND="${RDEPEND}
 		>=x11-libs/gtk+-3.1:3
 		>=sys-apps/dbus-1.5
 		>=dev-libs/dbus-glib-0.70
+		virtual/udev[gudev]
 		>=sys-power/upower-0.9
 		>=x11-libs/libnotify-0.7
 		x11-libs/libXScrnSaver
