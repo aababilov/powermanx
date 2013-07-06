@@ -1,6 +1,6 @@
 include $(top_srcdir)/common.mk
 
-SUBDIRS = src profiles plugins data doc
+SUBDIRS = src plugins data doc po
 
 MAINTAINERCLEANFILES +=          \
         intltool-*.in           \

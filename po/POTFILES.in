@@ -1,0 +1,3 @@
+data/pmx-applet.desktop.in
+data/profile_edit.ui
+src/pmx-applet/status_icon.cpp

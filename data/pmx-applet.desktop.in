@@ -1,0 +1,8 @@
+[Desktop Entry]
+_Name=Extensible Power Manager
+_Comment=Power management for any desktop
+Icon=pmx-ac-adapter
+Exec=pmx-applet
+Terminal=false
+Type=Application
+StartupNotify=false
