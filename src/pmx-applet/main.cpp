@@ -16,6 +16,7 @@
 */
 
 #include <gtk/gtk.h>
+#include <libnotify/notify.h>
 
 #include <libpowermanx/libpowermanx.hpp>
 
@@ -27,6 +28,8 @@ int main(int argc, char *argv[])
 	libpowermanx_init();
 
 	gtk_init(&argc, &argv);
+        if (!notify_is_initted())
+                notify_init("PowerManagerX");
 
 	GtkBuilder *builder;
 	const char *ui_file =  PKGDATADIR "/profile_edit.ui";

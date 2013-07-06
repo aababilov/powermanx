@@ -9,6 +9,7 @@ Build-Depends: debhelper (>= 7),
                libdbus-1-dev (>= 1.5),
                libdbus-glib-1-dev (>= 0.70),
                libupower-glib-dev (>= 0.9),
+               libnotify-dev (>= 0.7),
                libxss-dev,
                libjsoncpp-dev
 Standards-Version: 3.9.2

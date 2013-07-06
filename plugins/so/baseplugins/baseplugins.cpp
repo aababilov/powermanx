@@ -248,7 +248,7 @@ void slot_srsh_t::activate(const char *param)
 			"org.freedesktop.ConsoleKit",
 			"/org/freedesktop/ConsoleKit/Manager",
 			"org.freedesktop.ConsoleKit.Manager",
-			action == "Reboot" ? "Reboot": "Stop");
+			action == "Reboot" ? "Restart": "Stop");
 	}
 	dbus_error_init(&error);
 	result = dbus_connection_send_with_reply_and_block(glob_dbus_conn, message, -1, &error);

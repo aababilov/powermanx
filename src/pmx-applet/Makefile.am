@@ -6,11 +6,13 @@ bin_PROGRAMS = pmx-applet
 AM_CPPFLAGS =				\
 	$(common_AM_CPPFLAGS)		\
 	-DPKGDATADIR=\"$(pkgdatadir)\"	\
+	$(NOTIFY_CFLAGS)                \
 	$(GTK_CFLAGS)
 
 pmx_applet_LDADD = 			\
 	$(common_LDADD) 		\
 	$(GTK_LIBS)			\
+	$(NOTIFY_LIBS)                  \
 	$(builddir)/../libpowermanx/libpowermanx.la
 
 pmx_applet_SOURCES =		\

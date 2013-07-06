@@ -17,10 +17,13 @@
 #ifndef PMX_STATUS_ICON_HPP
 #define PMX_STATUS_ICON_HPP
 
-#include <libpowermanx/utils.hpp>
-#include <gtk/gtk.h>
 #include <set>
 #include <string>
+
+#include <gtk/gtk.h>
+#include <libnotify/notify.h>
+
+#include <libpowermanx/utils.hpp>
 
 #include "profile_edit.hpp"
 
@@ -34,26 +37,35 @@ private:
 	GtkStatusIcon *status_icon;
 	GtkMenu *menu_settings, *menu_slots;
 	GtkWidget *change_profile_menu;
+	NotifyNotification *notification;
 	pmx_profile_edit_t *profile_edit;
 	std::set<std::string> batteries;
+	double highest_percentage;
+	bool on_battery;
 
 	void create_menu_settings();
 	void create_menu_slots();
 	void create_status_icon();
-	void battery_add(UpDevice *device);
+	bool battery_add(UpDevice *device);
+	void do_notify(NotifyUrgency urgency,
+		       const char *summary,
+		       const char *message,
+		       const char *icon);
+        void clear_notify();
+	void power_notify();
 
 	static void on_upower_device_changed(
 		UpClient *client,
 		UpDevice *device,
-		gpointer user_data);
+		pmx_status_icon_t *icon);
 	static void on_upower_device_added(
 		UpClient *client,
 		UpDevice *device,
-		gpointer user_data);
+		pmx_status_icon_t *icon);
 	static void on_upower_device_removed(
 		UpClient *client,
 		UpDevice *device,
-		gpointer user_data);
+		pmx_status_icon_t *icon);
 
 	static void on_status_icon_popup_menu(
 		GtkStatusIcon *status_icon,

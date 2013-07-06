@@ -15,6 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <gtk/gtk.h>
+#include <libnotify/notify.h>
 
 #include "status_icon.hpp"
 #include "app_utils.hpp"
@@ -22,6 +23,41 @@
 #include <libpowermanx/libpowermanx.hpp>
 
 using namespace std;
+
+void
+pmx_status_icon_t::clear_notify()
+{
+        if (notification == NULL)
+                return;
+
+        notify_notification_close (notification, NULL);
+        g_object_unref(notification);
+        notification = NULL;
+}
+
+void
+pmx_status_icon_t::do_notify(NotifyUrgency urgency,
+			     const char *summary,
+			     const char *message,
+			     const char *icon)
+{
+	GError *error = NULL;
+
+	clear_notify();
+	notification = notify_notification_new(
+		summary,
+		message,
+		icon ? icon : GTK_STOCK_INFO);
+
+	notify_notification_set_hint(notification, "transient", g_variant_new_boolean (TRUE));
+	notify_notification_set_urgency(notification, urgency);
+	notify_notification_set_timeout(notification, NOTIFY_EXPIRES_DEFAULT);
+	if (!notify_notification_show(notification, &error)) {
+		g_warning("Failed to show notification: %s",
+			  error && error->message ? error->message : "(unknown)");
+		g_clear_error(&error);
+	}
+}
 
 pmx_status_icon_t::pmx_status_icon_t(GtkBuilder *builder)
 {
@@ -57,12 +93,13 @@ pmx_status_icon_t::pmx_status_icon_t(GtkBuilder *builder)
 		battery_add((UpDevice*)g_ptr_array_index(devices, i));
 	}
 	g_ptr_array_unref(devices);
+	on_battery = !up_client_get_on_battery(glob_up_client);
 
 	icon_changed();
 	profile_edit = new pmx_profile_edit_t(builder, this);
 }
 
-void
+bool
 pmx_status_icon_t::battery_add(UpDevice *device)
 {
 	UpDeviceKind kind;
@@ -71,39 +108,48 @@ pmx_status_icon_t::battery_add(UpDevice *device)
 		const char *path = up_device_get_object_path(device);
 		print_debug("battery: %s", path);
 		batteries.insert(path);
+		return true;
 	}
+	return false;
 }
 
 void
 pmx_status_icon_t::on_upower_device_changed(
 	UpClient *client,
 	UpDevice *device,
-	gpointer user_data)
+	pmx_status_icon_t *icon)
 {
-	pmx_status_icon_t *icon = static_cast<pmx_status_icon_t*>(user_data);
+	bool old_on_battery = icon->on_battery;
 	icon->icon_changed();
+	if (icon->on_battery != old_on_battery) {
+		icon->power_notify();
+	}
 }
 
 void
 pmx_status_icon_t::on_upower_device_added(
 	UpClient *client,
 	UpDevice *device,
-	gpointer user_data)
+	pmx_status_icon_t *icon)
 {
-	pmx_status_icon_t *icon = static_cast<pmx_status_icon_t*>(user_data);
-	icon->battery_add(device);
-	icon->icon_changed();
+	if (icon->battery_add(device)) {
+		icon->icon_changed();
+		icon->power_notify();
+	}
 }
 
 void
 pmx_status_icon_t::on_upower_device_removed(
 	UpClient *client,
 	UpDevice *device,
-	gpointer user_data)
+	pmx_status_icon_t *icon)
 {
-	pmx_status_icon_t *icon = static_cast<pmx_status_icon_t*>(user_data);
-	icon->batteries.erase(up_device_get_object_path(device));
-	icon->icon_changed();
+	string path = up_device_get_object_path(device);
+	if (icon->batteries.count(path)) {
+		icon->batteries.erase(path);
+		icon->icon_changed();
+		icon->power_notify();
+	}
 }
 
 static const gchar *
@@ -124,11 +170,32 @@ get_icon_index(int percentage)
 }
 
 void
+pmx_status_icon_t::power_notify()
+{
+	if (batteries.size() == 0) {
+		do_notify(NOTIFY_URGENCY_NORMAL, _("On AC power"), NULL, "pmx-ac-adapter");
+		return;
+	}
+
+	string icon_name = string("pmx-primary-") +
+		get_icon_index(highest_percentage)
+		+ (on_battery ? "" : "-charging");
+	char *summary = g_strdup_printf(
+		_("On %s power"),
+		on_battery ? _("battery") : _("AC"));
+	char *message = g_strdup_printf(
+			_("Batter level is %.0lf%%"),
+			highest_percentage);
+	do_notify(NOTIFY_URGENCY_NORMAL, summary, message, icon_name.c_str());
+	g_free(message);
+	g_free(summary);
+}
+
+void
 pmx_status_icon_t::icon_changed()
 {
 	string icon_name;
-	bool adapter_present = false;
-	double highest_percentage = 0;
+	highest_percentage = 0;
 
 	if (batteries.size() == 0) {
 		gtk_status_icon_set_from_icon_name(
@@ -140,16 +207,17 @@ pmx_status_icon_t::icon_changed()
 		return;
 	}
 
-	adapter_present = !up_client_get_on_battery(glob_up_client);
+	on_battery = up_client_get_on_battery(glob_up_client);
 	UpDevice *battery = up_device_new();
 	FOREACH_CONST (set<string>, i, batteries) {
-		print_debug("fr bat: %s", i->c_str());
 		if (!up_device_set_object_path_sync(battery, i->c_str(), NULL, NULL))
 			continue;
 		double percentage;
 		UpDeviceState state;
 		g_object_get(battery, "state", &state, "percentage", &percentage, NULL);
-		if (adapter_present && state == UP_DEVICE_STATE_FULLY_CHARGED) {
+		if (highest_percentage < percentage)
+			highest_percentage = percentage;
+		if (!on_battery && state == UP_DEVICE_STATE_FULLY_CHARGED) {
 			gtk_status_icon_set_from_icon_name(
 				status_icon,
 				"pmx-primary-charged");
@@ -162,26 +230,22 @@ pmx_status_icon_t::icon_changed()
 			g_free(msg);
 			return;
 		}
-
-		if (highest_percentage < percentage)
-			highest_percentage = percentage;
 	}
 
 	icon_name = string("pmx-primary-") +
 		get_icon_index(highest_percentage)
-		+ (adapter_present ? "-charging":"");
+		+ (on_battery ? "" : "-charging");
 	gtk_status_icon_set_from_icon_name(
 		status_icon,
 		icon_name.c_str());
 	char *msg = g_strdup_printf(
 		_("On %s power\nBattery level is %.0lf%%"),
-		adapter_present ? _("AC") : _("battery"),
+		on_battery ? _("battery") : _("AC"),
 		highest_percentage);
 	gtk_status_icon_set_tooltip_text(
 		status_icon,
 		msg);
 	g_free(msg);
-	print_debug("ic: %s\n", icon_name.c_str());
 }
 
 void

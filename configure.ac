@@ -26,6 +26,7 @@ GTK_REQUIRED=3.1
 DBUS_REQUIRED=1.5
 DBUS_GLIB_REQUIRED=0.70
 UPOWER_REQUIRED=0.9
+NOTIFY_REQUIRED=0.7
 
 dnl ---------------------------------------------------------------------------
 dnl - Make above strings available for packaging files (e.g. rpm spec files)
@@ -35,6 +36,7 @@ AC_SUBST(GTK_REQUIRED)
 AC_SUBST(DBUS_REQUIRED)
 AC_SUBST(DBUS_GLIB_REQUIRED)
 AC_SUBST(UPOWER_REQUIRED)
+AC_SUBST(NOTIFY_REQUIRED)
 
 dnl ---------------------------------------------------------------------------
 dnl - Check library dependencies
@@ -57,6 +59,10 @@ AC_SUBST(DBUS_LIBS)
 PKG_CHECK_MODULES(UPOWER, upower-glib >= $UPOWER_REQUIRED)
 AC_SUBST(UPOWER_CFLAGS)
 AC_SUBST(UPOWER_LIBS)
+
+PKG_CHECK_MODULES(NOTIFY, [libnotify >= $NOTIFY_REQUIRED])
+AC_SUBST(NOTIFY_CFLAGS)
+AC_SUBST(NOTIFY_LIBS)
 
 PKG_CHECK_MODULES(XSCRNSAVER, xscrnsaver x11 xext)
 AC_SUBST(XSCRNSAVER_CFLAGS)
