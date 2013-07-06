@@ -1,0 +1,8 @@
+[Unit]
+Description=Extensible power daemon
+Documentation=man:powermanx(8)
+
+[Service]
+Type=dbus
+BusName=org.freedesktop.PowerManX
+ExecStart=@sbindir@/pmx-daemon

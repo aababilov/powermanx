@@ -4,7 +4,12 @@ plugindir = $(pkglibdir)
 pluginsodir = $(plugindir)/so
 pluginexecdir = $(plugindir)/exec
 pluginhaldir = $(plugindir)/hal
-dbusdir = $(DBUS_SYS_DIR)
+
+
+MAINTAINERCLEANFILES =                  \
+        *~                              \
+        Makefile.in
+
 
 clean-local:
 	rm -f *~

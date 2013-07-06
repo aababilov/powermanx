@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=org.freedesktop.PowerManX
+Exec=@sbindir@/pmx-daemon
+User=root
+SystemdService=powermanx.service

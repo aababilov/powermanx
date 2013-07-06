@@ -6,7 +6,7 @@ EAPI="5"
 
 EGIT_REPO_URI="git://github.com/aababilov/powermanx.git"
 
-inherit autotools git-2
+inherit autotools systemd git-2
 
 DESCRIPTION="Extensible power manager"
 HOMEPAGE="http://github.com/aababilov/powermanx"
@@ -14,10 +14,13 @@ HOMEPAGE="http://github.com/aababilov/powermanx"
 LICENSE="GPL-3+"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE=""
+IUSE="kernel_linux systemd"
 
 RDEPEND=""
 DEPEND="${RDEPEND}
+		kernel_linux? (
+				systemd? ( sys-apps/systemd )
+		)
 		>=dev-libs/glib-2.24
 		>=x11-libs/gtk+-3.1:3
 		>=sys-apps/dbus-1.5
@@ -36,7 +39,7 @@ src_prepare() {
 }
 
 src_configure() {
-	econf
+	econf "$(systemd_with_unitdir)"
 }
 
 src_install() {

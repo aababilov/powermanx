@@ -3,6 +3,7 @@ AC_CONFIG_SRCDIR([src])
 AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE
+AM_MAINTAINER_MODE
 
 AC_DISABLE_STATIC
 
@@ -12,10 +13,6 @@ AC_PROG_LIBTOOL
 PKG_PROG_PKG_CONFIG
 
 AM_CONFIG_HEADER(config.h)
-
-AC_ARG_WITH([dbus-sys],
-        AS_HELP_STRING([--with-dbus-sys=<dir>],
-                [where D-BUS system.d directory is]))
 
 if test "$GCC" = "yes"; then
     CPPFLAGS="$CPPFLAGS -Wcast-align -Wno-uninitialized -Wall -Wformat-security"
@@ -61,7 +58,7 @@ PKG_CHECK_MODULES(UPOWER, upower-glib >= $UPOWER_REQUIRED)
 AC_SUBST(UPOWER_CFLAGS)
 AC_SUBST(UPOWER_LIBS)
 
-PKG_CHECK_MODULES(XSCRNSAVER, xscrnsaver)
+PKG_CHECK_MODULES(XSCRNSAVER, xscrnsaver x11 xext)
 AC_SUBST(XSCRNSAVER_CFLAGS)
 AC_SUBST(XSCRNSAVER_LIBS)
 
@@ -69,12 +66,15 @@ AC_SUBST(JSONCPP_CFLAGS, -I/usr/include/jsoncpp)
 AC_SUBST(JSONCPP_LIBS, -ljsoncpp)
 
 
-if ! test -z "$with_dbus_sys" ; then
-    DBUS_SYS_DIR="$with_dbus_sys"
-else
-    DBUS_SYS_DIR="$sysconfdir/dbus-1/system.d"
-fi
-AC_SUBST(DBUS_SYS_DIR)
+dnl ---------------------------------------------------------------------------
+dnl - Check for systemd
+dnl ---------------------------------------------------------------------------
+AC_ARG_WITH([systemdsystemunitdir],
+            AS_HELP_STRING([--with-systemdsystemunitdir=DIR], [Directory for systemd service files]),
+            [],
+            [with_systemdsystemunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)])
+AC_SUBST([systemdsystemunitdir], [$with_systemdsystemunitdir])
+AM_CONDITIONAL(HAVE_SYSTEMDSYSTEMUNITDIR, [test -n "$with_systemdsystemunitdir"])
 
 
 AC_OUTPUT([Makefile
@@ -88,7 +88,6 @@ AC_OUTPUT([Makefile
 	plugins/hal/Makefile
 	plugins/so/Makefile
 	plugins/so/baseplugins/Makefile
-	dbus/Makefile
 	data/Makefile
 	data/icons/Makefile
 	data/icons/16x16/Makefile
