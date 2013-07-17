@@ -14,22 +14,18 @@ HOMEPAGE="http://github.com/aababilov/powermanx"
 LICENSE="GPL-3+"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="kernel_linux systemd"
 
 RDEPEND=""
 DEPEND="${RDEPEND}
-		kernel_linux? (
-				systemd? ( sys-apps/systemd )
-		)
-		>=dev-libs/glib-2.24
-		>=x11-libs/gtk+-3.1:3
-		>=sys-apps/dbus-1.5
-		>=dev-libs/dbus-glib-0.70
-		virtual/udev[gudev]
-		>=sys-power/upower-0.9
-		>=x11-libs/libnotify-0.7
-		x11-libs/libXScrnSaver
-		dev-libs/jsoncpp
+	>=dev-libs/glib-2.24
+	>=x11-libs/gtk+-3.1:3
+	>=sys-apps/dbus-1.5
+	>=dev-libs/dbus-glib-0.70
+	virtual/udev[gudev]
+	>=sys-power/upower-0.9
+	>=x11-libs/libnotify-0.7
+	x11-libs/libXScrnSaver
+	dev-libs/jsoncpp
 "
 
 src_prepare() {
