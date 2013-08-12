@@ -74,14 +74,8 @@ string to_string(int i)
 void
 print_debug(const char *fmt, ...)
 {
-	struct timeval tnow;
-	struct tm *tloc;
 	va_list l;
 	va_start(l, fmt);
-	gettimeofday(&tnow, NULL);
-        tloc = localtime((time_t *) &tnow.tv_sec);
-        fprintf(stderr, "%02d:%02d:%02d: ", tloc->tm_hour, tloc->tm_min, tloc->tm_sec);
-	fflush(stderr);
 	vfprintf(stderr, fmt, l);
 	if (fmt[strlen(fmt) - 1] != '\n')
 		fputc('\n', stderr);
