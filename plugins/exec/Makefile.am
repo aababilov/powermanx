@@ -1,5 +1,8 @@
 include $(top_srcdir)/common.mk
 
-dist_pluginexec_SCRIPTS = smp_plug_exe wireless dirty_writeback cdrom_polling
-
-
+dist_pluginexec_SCRIPTS = \
+    cdrom_polling         \
+    dirty_writeback       \
+    lcd_brightness        \
+    smp_plug_exe          \
+    wireless
