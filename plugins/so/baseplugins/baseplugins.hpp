@@ -25,12 +25,15 @@ public:
 	virtual void activate(const char *param);
 };
 
-class slot_srsh_t: public slot_plugin_t {
+class slot_power_t: public slot_plugin_t {
 public:
-	slot_srsh_t(const std::string &name);
+	typedef gboolean (*callback_t)(GError **error);
+
+	slot_power_t(const std::string &name, callback_t callback);
 	virtual void activate(const char *param);
 private:
 	std::string action;
+	callback_t callback;
 };
 
 class slot_change_profile_t: public slot_plugin_t {

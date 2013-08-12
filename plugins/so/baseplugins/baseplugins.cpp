@@ -14,19 +14,17 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <algorithm>
 #include <cassert>
-#include <libpowermanx/profile.hpp>
-#include "baseplugins.hpp"
-#include <gmodule.h>
-
 #include <cstdio>
 #include <cstdlib>
 #include <cctype>
 
-#include <algorithm>
-
 #include <utmpx.h>
 #include <pwd.h>
+
+#include <gmodule.h>
+#include <lightdm.h>
 
 #define HAVE_DPMS_EXTENSION
 
@@ -37,7 +35,11 @@
 #include <X11/extensions/dpms.h>
 #endif
 
+#include <libpowermanx/profile.hpp>
+
+#include "baseplugins.hpp"
 #include "get_idletime.hpp"
+
 
 using std::string;
 using namespace std;
@@ -222,44 +224,19 @@ slot_exec_t::activate(const char *param)
 	g_spawn_command_line_async(param, NULL);
 }
 
-slot_srsh_t::slot_srsh_t(const std::string &name)
+slot_power_t::slot_power_t(const std::string &name, slot_power_t::callback_t callback)
 	: slot_plugin_t(name)
 {
 	set_has_param(false);
 	action = name;
-	action[0] = toupper(action[0]);
+	this->callback = callback;
 }
 
-void slot_srsh_t::activate(const char *param)
-{
-	DBusMessage *message, *result;
-	DBusError error;
 
+void slot_power_t::activate(const char *param)
+{
 	print_debug("try %s...", action.c_str());
-	if (action == "Suspend" || action == "Hibernate") {
-		message = dbus_message_new_method_call(
-			"org.freedesktop.UPower",
-			"/org/freedesktop/UPower",
-			"org.freedesktop.UPower",
-			action.c_str());
-	} else {
-		// shutdown, reboot
-		message = dbus_message_new_method_call(
-			"org.freedesktop.ConsoleKit",
-			"/org/freedesktop/ConsoleKit/Manager",
-			"org.freedesktop.ConsoleKit.Manager",
-			action == "Reboot" ? "Restart": "Stop");
-	}
-	dbus_error_init(&error);
-	result = dbus_connection_send_with_reply_and_block(glob_dbus_conn, message, -1, &error);
-	if (dbus_error_is_set(&error)) {
-		print_debug("Couldn't send dbus message: %s",
-			    error.message);
-		dbus_error_free(&error);
-	} else {
-		dbus_message_unref(result);
-	}
-	dbus_message_unref(message);
+	callback(NULL);
 }
 
 #define egg_warning(arg...) print_debug("warning: " arg)
@@ -489,10 +466,10 @@ g_module_check_init(GModule *module)
 	initialized = true;
 
 	new slot_exec_t();
-	new slot_srsh_t("suspend");
-	new slot_srsh_t("hibernate");
-	new slot_srsh_t("shutdown");
-	new slot_srsh_t("reboot");
+	new slot_power_t("suspend", lightdm_suspend);
+	new slot_power_t("hibernate", lightdm_hibernate);
+	new slot_power_t("shutdown", lightdm_shutdown);
+	new slot_power_t("restart", lightdm_restart);
 	new slot_change_profile_t();
 	new slot_dim_t();
 

@@ -3,7 +3,8 @@ include $(top_srcdir)/common.src.mk
 
 pluginso_LTLIBRARIES = baseplugins.la
 
-AM_CPPFLAGS = $(common_AM_CPPFLAGS)		\
+AM_CPPFLAGS = $(common_AM_CPPFLAGS)	\
+        $(LIGHTDM_CFLAGS)               \
         $(XSCRNSAVER_CFLAGS)
 
 baseplugins_la_SOURCES = 		\
@@ -19,5 +20,6 @@ baseplugins_la_LDFLAGS =		\
 
 baseplugins_la_LIBADD = 		\
 	$(common_LDADD)			\
+        $(LIGHTDM_LIBS) 		\
         $(XSCRNSAVER_LIBS)		\
 	$(top_builddir)/src/libpowermanx/libpowermanx.la

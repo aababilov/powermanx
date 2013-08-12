@@ -23,6 +23,7 @@ DEPEND="${RDEPEND}
 	>=dev-libs/dbus-glib-0.70
 	virtual/udev[gudev]
 	>=sys-power/upower-0.9
+	x11-misc/lightdm
 	>=x11-libs/libnotify-0.7
 	x11-libs/libXScrnSaver
 	dev-libs/jsoncpp
