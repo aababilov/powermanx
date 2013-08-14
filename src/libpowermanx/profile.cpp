@@ -154,7 +154,7 @@ void profile_t::start_element(GMarkupParseContext *context,
 				element_name, attribute_names,
 				attribute_values, error,
 				G_MARKUP_COLLECT_STRING, "name", &name,
-				G_MARKUP_COLLECT_STRING|G_MARKUP_COLLECT_OPTIONAL, "enabled", &enabled,
+				G_MARKUP_COLLECT_BOOLEAN|G_MARKUP_COLLECT_OPTIONAL, "enabled", &enabled,
 				G_MARKUP_COLLECT_STRING|G_MARKUP_COLLECT_OPTIONAL, "param", &param,
 				G_MARKUP_COLLECT_INVALID);
 			if (res) {
