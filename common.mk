@@ -1,4 +1,4 @@
-profiledir = $(localstatedir)/$(PACKAGE)/profiles
+profiledir = $(localstatedir)/lib/$(PACKAGE)/profiles
 
 plugindir = $(pkglibdir)
 pluginsodir = $(plugindir)/so

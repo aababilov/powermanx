@@ -38,7 +38,9 @@ src_prepare() {
 }
 
 src_configure() {
-	econf "$(systemd_with_unitdir)"
+	econf \
+		--localstatedir=/var \
+		"$(systemd_with_unitdir)"
 }
 
 src_install() {
