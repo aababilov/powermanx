@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<signal type="bool">
-  <identification>
-    <property key="info.capabilities" type="string" value="ac_adapter"/>
-  </identification>
-  <signalization type="property_value" name="ac_adapter.present"/>
-</signal>

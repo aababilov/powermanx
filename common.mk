@@ -5,6 +5,7 @@ pluginsodir = $(plugindir)/so
 pluginexecdir = $(plugindir)/exec
 pluginhaldir = $(plugindir)/hal
 
+NULL =
 
 MAINTAINERCLEANFILES =                  \
         *~                              \

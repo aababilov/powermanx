@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<signal type="bool">
-  <identification>
-    <property key="info.capabilities" type="string" value="button"/>
-    <property key="button.type" type="string" value="lid"/>
-  </identification>
-  <signalization type="property_value" name="button.state.value"/>
-</signal>

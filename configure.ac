@@ -146,7 +146,6 @@ AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  plugins/Makefile
                  plugins/exec/Makefile
-                 plugins/hal/Makefile
                  plugins/so/Makefile
                  plugins/so/baseplugins/Makefile
                  po/Makefile.in

@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<signal type="int">
-  <identification>
-    <property key="info.capabilities" type="string" value="battery"/>
-  </identification>
-  <signalization type="property_value" name="battery.charge_level.percentage"/>
-</signal>
